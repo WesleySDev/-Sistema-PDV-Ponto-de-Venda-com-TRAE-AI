@@ -1,0 +1,101 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f5f5f5"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="800" height="80" fill="#1976d2"/>
+  <text x="40" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">🛒 Sistema PDV</text>
+  <text x="40" y="60" font-family="Arial, sans-serif" font-size="14" fill="#e3f2fd">Ponto de Venda - Desenvolvido com TRAE AI</text>
+  
+  <!-- Navigation -->
+  <rect x="0" y="80" width="200" height="520" fill="#2196f3"/>
+  
+  <!-- Nav Items -->
+  <rect x="10" y="100" width="180" height="40" rx="5" fill="#1976d2"/>
+  <text x="25" y="125" font-family="Arial, sans-serif" font-size="14" fill="white">📊 Dashboard</text>
+  
+  <rect x="10" y="150" width="180" height="40" rx="5" fill="#42a5f5"/>
+  <text x="25" y="175" font-family="Arial, sans-serif" font-size="14" fill="white">📦 Produtos</text>
+  
+  <rect x="10" y="200" width="180" height="40" rx="5" fill="#42a5f5"/>
+  <text x="25" y="225" font-family="Arial, sans-serif" font-size="14" fill="white">🛒 PDV</text>
+  
+  <rect x="10" y="250" width="180" height="40" rx="5" fill="#42a5f5"/>
+  <text x="25" y="275" font-family="Arial, sans-serif" font-size="14" fill="white">📈 Vendas</text>
+  
+  <!-- Main Content Area -->
+  <rect x="200" y="80" width="600" height="520" fill="white"/>
+  
+  <!-- Dashboard Cards -->
+  <rect x="220" y="100" width="140" height="100" rx="8" fill="#e8f5e8" stroke="#4caf50" stroke-width="2"/>
+  <text x="230" y="125" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2e7d32">Vendas Hoje</text>
+  <text x="230" y="145" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2e7d32">R$ 2.450,00</text>
+  <text x="230" y="165" font-family="Arial, sans-serif" font-size="10" fill="#4caf50">↗ +15% vs ontem</text>
+  
+  <rect x="380" y="100" width="140" height="100" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+  <text x="390" y="125" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1565c0">Produtos</text>
+  <text x="390" y="145" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1565c0">127</text>
+  <text x="390" y="165" font-family="Arial, sans-serif" font-size="10" fill="#2196f3">Em estoque</text>
+  
+  <rect x="540" y="100" width="140" height="100" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
+  <text x="550" y="125" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#e65100">Clientes</text>
+  <text x="550" y="145" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#e65100">89</text>
+  <text x="550" y="165" font-family="Arial, sans-serif" font-size="10" fill="#ff9800">Ativos</text>
+  
+  <!-- Chart Area -->
+  <rect x="220" y="220" width="460" height="200" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="230" y="240" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#424242">📊 Vendas dos Últimos 7 Dias</text>
+  
+  <!-- Simple Chart Bars -->
+  <rect x="240" y="350" width="30" height="50" fill="#4caf50"/>
+  <rect x="280" y="330" width="30" height="70" fill="#4caf50"/>
+  <rect x="320" y="340" width="30" height="60" fill="#4caf50"/>
+  <rect x="360" y="320" width="30" height="80" fill="#4caf50"/>
+  <rect x="400" y="310" width="30" height="90" fill="#4caf50"/>
+  <rect x="440" y="325" width="30" height="75" fill="#4caf50"/>
+  <rect x="480" y="335" width="30" height="65" fill="#4caf50"/>
+  
+  <!-- Chart Labels -->
+  <text x="250" y="415" font-family="Arial, sans-serif" font-size="10" fill="#666">Seg</text>
+  <text x="290" y="415" font-family="Arial, sans-serif" font-size="10" fill="#666">Ter</text>
+  <text x="330" y="415" font-family="Arial, sans-serif" font-size="10" fill="#666">Qua</text>
+  <text x="370" y="415" font-family="Arial, sans-serif" font-size="10" fill="#666">Qui</text>
+  <text x="410" y="415" font-family="Arial, sans-serif" font-size="10" fill="#666">Sex</text>
+  <text x="450" y="415" font-family="Arial, sans-serif" font-size="10" fill="#666">Sáb</text>
+  <text x="490" y="415" font-family="Arial, sans-serif" font-size="10" fill="#666">Dom</text>
+  
+  <!-- Recent Sales Table -->
+  <rect x="220" y="440" width="460" height="140" rx="8" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="230" y="460" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#424242">🛍️ Vendas Recentes</text>
+  
+  <!-- Table Header -->
+  <rect x="230" y="470" width="440" height="25" fill="#f5f5f5"/>
+  <text x="240" y="485" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#666">Produto</text>
+  <text x="400" y="485" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#666">Qtd</text>
+  <text x="500" y="485" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#666">Valor</text>
+  <text x="580" y="485" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#666">Status</text>
+  
+  <!-- Table Rows -->
+  <text x="240" y="510" font-family="Arial, sans-serif" font-size="10" fill="#424242">Notebook Dell</text>
+  <text x="400" y="510" font-family="Arial, sans-serif" font-size="10" fill="#424242">1</text>
+  <text x="500" y="510" font-family="Arial, sans-serif" font-size="10" fill="#424242">R$ 2.500,00</text>
+  <circle cx="590" cy="506" r="4" fill="#4caf50"/>
+  <text x="600" y="510" font-family="Arial, sans-serif" font-size="9" fill="#4caf50">Pago</text>
+  
+  <text x="240" y="530" font-family="Arial, sans-serif" font-size="10" fill="#424242">Mouse Gamer</text>
+  <text x="400" y="530" font-family="Arial, sans-serif" font-size="10" fill="#424242">2</text>
+  <text x="500" y="530" font-family="Arial, sans-serif" font-size="10" fill="#424242">R$ 150,00</text>
+  <circle cx="590" cy="526" r="4" fill="#4caf50"/>
+  <text x="600" y="530" font-family="Arial, sans-serif" font-size="9" fill="#4caf50">Pago</text>
+  
+  <text x="240" y="550" font-family="Arial, sans-serif" font-size="10" fill="#424242">Teclado Mecânico</text>
+  <text x="400" y="550" font-family="Arial, sans-serif" font-size="10" fill="#424242">1</text>
+  <text x="500" y="550" font-family="Arial, sans-serif" font-size="10" fill="#424242">R$ 300,00</text>
+  <circle cx="590" cy="546" r="4" fill="#ff9800"/>
+  <text x="600" y="550" font-family="Arial, sans-serif" font-size="9" fill="#ff9800">Pendente</text>
+  
+  <!-- Footer -->
+  <rect x="0" y="580" width="800" height="20" fill="#424242"/>
+  <text x="40" y="595" font-family="Arial, sans-serif" font-size="10" fill="white">Desenvolvido com ❤️ e 🤖 TRAE AI em 3 dias</text>
+  <text x="650" y="595" font-family="Arial, sans-serif" font-size="10" fill="white">v1.0.0</text>
+</svg>

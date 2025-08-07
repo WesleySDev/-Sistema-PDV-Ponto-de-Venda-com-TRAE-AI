@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de API</title>
+</head>
+<body>
+    <h1>Teste de Conectividade API</h1>
+    <button onclick="testAPI()">Testar API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testando...';
+            
+            try {
+                console.log('Testando health check...');
+                const healthResponse = await fetch('http://localhost:8081/health');
+                const healthData = await healthResponse.json();
+                console.log('Health check OK:', healthData);
+                
+                console.log('Fazendo login...');
+                const loginResponse = await fetch('http://localhost:8081/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@pdv.com',
+                        password: 'password'
+                    })
+                });
+                
+                if (!loginResponse.ok) {
+                    throw new Error(`Login falhou: ${loginResponse.status}`);
+                }
+                
+                const loginData = await loginResponse.json();
+                console.log('Login OK, token obtido');
+                
+                console.log('Testando categorias...');
+                const categoriesResponse = await fetch('http://localhost:8081/api/v1/categories', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${loginData.token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!categoriesResponse.ok) {
+                    throw new Error(`Categorias falhou: ${categoriesResponse.status}`);
+                }
+                
+                const categoriesData = await categoriesResponse.json();
+                console.log('Categorias OK:', categoriesData);
+                
+                resultDiv.innerHTML = `
+                    <h2>✅ Sucesso!</h2>
+                    <p>Health check: ${healthData.message}</p>
+                    <p>Login: Token obtido com sucesso</p>
+                    <p>Categorias: ${categoriesData.length} categorias encontradas</p>
+                    <pre>${JSON.stringify(categoriesData, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                resultDiv.innerHTML = `
+                    <h2>❌ Erro</h2>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

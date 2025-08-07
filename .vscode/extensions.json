@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-sqlite",
+    "mtxr.sqltools-driver-pg",
+    "alexcvzz.vscode-sqlite",
+    "qwtel.sqlite-viewer",
+    "cweijan.vscode-database-client2",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-json",
+    "golang.go",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}

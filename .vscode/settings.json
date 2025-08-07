@@ -1,0 +1,20 @@
+{
+  "sqltools.connections": [],
+  "sqltools.useNodeRuntime": true,
+  "sqltools.autoOpenSessionFiles": false,
+  "sqltools.showStatusbar": true,
+  "sqltools.defaultExportType": "json",
+  "sqltools.format": {
+    "language": "sql",
+    "indent": "  "
+  },
+  "files.associations": {
+    "*.db": "sqlite",
+    "*.sqlite": "sqlite",
+    "*.sqlite3": "sqlite"
+  },
+  "sqlite.sqlite3": "sqlite3",
+  "sqlite-viewer.maxTableSize": 1000,
+  "database-client.telemetry.usesOnlineServices": false,
+  "database-client.showQuery": true
+}
