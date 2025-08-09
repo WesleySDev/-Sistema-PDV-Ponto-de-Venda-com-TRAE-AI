@@ -32,27 +32,12 @@ const CurrencyInput = ({
     onBlur,
     onFocus,
     setValue
-  } = useCurrencyInput(value);
+  } = useCurrencyInput(value, onChange);
 
   // Sincroniza o valor interno com o valor externo
   React.useEffect(() => {
     setValue(value);
   }, [value, setValue]);
-
-  const handleChange = (e) => {
-    onInputChange(e);
-    // Chama o onChange externo com o valor numérico
-    if (onChange) {
-      // Remove formatação e converte para número
-      let cleanValue = e.target.value.replace(/[^0-9,\.]/g, '');
-      if (cleanValue.includes(',')) {
-        cleanValue = cleanValue.replace(',', '.');
-      }
-      const numericValue = parseFloat(cleanValue) || 0;
-      // Usa setTimeout para garantir que o estado interno seja atualizado primeiro
-      setTimeout(() => onChange(numericValue), 0);
-    }
-  };
 
   const handleBlur = (e) => {
     onBlur();
@@ -74,7 +59,7 @@ const CurrencyInput = ({
     <TextField
       {...otherProps}
       value={displayValue}
-      onChange={handleChange}
+      onChange={onInputChange}
       onBlur={handleBlur}
       onFocus={handleFocus}
       label={label}

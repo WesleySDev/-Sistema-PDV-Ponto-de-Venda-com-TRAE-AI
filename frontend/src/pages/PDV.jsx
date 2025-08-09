@@ -37,12 +37,15 @@ import {
   Payment as PaymentIcon,
   QrCodeScanner as ScannerIcon,
   Print as PrintIcon,
-  Receipt as ReceiptIcon
+  Receipt as ReceiptIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CurrencyInput from '../components/CurrencyInput';
 import { formatCurrency } from '../utils/currency';
+import { printReceipt, isPrinterAvailable, detectThermalPrinter } from '../utils/printer';
+import PrinterSettings from '../components/PrinterSettings';
 
 const PDV = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -52,16 +55,62 @@ const PDV = () => {
   const [success, setSuccess] = useState('');
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('dinheiro');
-  const [amountReceived, setAmountReceived] = useState('');
+  const [amountReceived, setAmountReceived] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [scannerDetected, setScannerDetected] = useState(false);
+  const [printerSettingsOpen, setPrinterSettingsOpen] = useState(false);
+  const [thermalPrinterDetected, setThermalPrinterDetected] = useState(false);
+  const [printerAvailable, setPrinterAvailable] = useState(false);
   const { user } = useAuth();
   const barcodeInputRef = useRef(null);
+  const barcodeTimeoutRef = useRef(null);
+  const lastKeystrokeRef = useRef(0);
 
   // Focar no input de código de barras quando a página carrega
   useEffect(() => {
     if (barcodeInputRef.current) {
       barcodeInputRef.current.focus();
     }
+    
+    // Cleanup ao desmontar o componente
+    return () => {
+      if (barcodeTimeoutRef.current) {
+        clearTimeout(barcodeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Detectar impressoras térmicas automaticamente
+  useEffect(() => {
+    const checkPrinters = async () => {
+      try {
+        // Verifica se há impressora disponível
+        const printerCheck = await isPrinterAvailable();
+        setPrinterAvailable(printerCheck);
+        
+        // Verifica se há impressora térmica conectada
+        const thermalCheck = await detectThermalPrinter();
+        setThermalPrinterDetected(thermalCheck);
+        
+        if (thermalCheck) {
+          setSuccess('Impressora térmica detectada! As notas fiscais serão impressas automaticamente.');
+          setTimeout(() => setSuccess(''), 5000);
+        }
+      } catch (error) {
+        console.error('Erro ao detectar impressoras:', error);
+      }
+    };
+
+    // Verifica imediatamente
+    checkPrinters();
+
+    // Verifica periodicamente a cada 10 segundos
+    const interval = setInterval(checkPrinters, 10000);
+
+    // Cleanup
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   // Buscar produto por código de barras
@@ -77,11 +126,15 @@ const PDV = () => {
       
       if (product.stock <= 0) {
         setError('Produto sem estoque disponível');
+        setBarcode(''); // Limpar código quando sem estoque
+        setScannerDetected(false);
         return;
       }
       
       addToCart(product);
       setBarcode('');
+      setScannerDetected(false); // Reset scanner indicator
+      setSuccess(`Produto ${product.name} adicionado ao carrinho!`);
       
       // Focar novamente no input após adicionar
       setTimeout(() => {
@@ -92,6 +145,8 @@ const PDV = () => {
       
     } catch (error) {
       setError(error.response?.data?.error || 'Produto não encontrado');
+      setBarcode(''); // Limpar código inválido
+      setScannerDetected(false);
     } finally {
       setLoading(false);
     }
@@ -187,12 +242,58 @@ const PDV = () => {
         amount_received: paymentMethod === 'dinheiro' ? parseFloat(amountReceived) : parseFloat(total)
       };
       
-      await axios.post('/sales/', saleData);
+      const response = await axios.post('/sales/', saleData);
       
-      setSuccess('Venda finalizada com sucesso!');
+      // Preparar dados para impressão da nota fiscal
+      const receiptData = {
+        ...saleData,
+        vendedor: user?.name || 'Sistema',
+        saleId: response.data?.id
+      };
+      
+      const totalsData = {
+        subtotal,
+        discount: parseFloat(discount) || 0,
+        discountPercentage: parseFloat(discount) || 0,
+        discountAmount: (subtotal * parseFloat(discount)) / 100,
+        total,
+        change: paymentMethod === 'dinheiro' ? change : 0
+      };
+      
+      // Tentar imprimir nota fiscal automaticamente se impressora disponível
+      try {
+        // Verifica primeiro se há impressora térmica conectada
+        const thermalPrinter = await detectThermalPrinter();
+        const printerCheck = await isPrinterAvailable();
+        
+        if (thermalPrinter) {
+          // Impressora térmica detectada - impressão prioritária
+          const printSuccess = await printReceipt(receiptData, cartItems, totalsData);
+          if (printSuccess) {
+            setSuccess('Venda finalizada com sucesso! Nota fiscal impressa na impressora térmica.');
+          } else {
+            setSuccess('Venda finalizada com sucesso! (Erro na impressão térmica)');
+          }
+        } else if (printerCheck) {
+          // Impressora padrão disponível
+          const printSuccess = await printReceipt(receiptData, cartItems, totalsData);
+          if (printSuccess) {
+            setSuccess('Venda finalizada com sucesso! Nota fiscal enviada para impressão.');
+          } else {
+            setSuccess('Venda finalizada com sucesso! (Erro na impressão da nota fiscal)');
+          }
+        } else {
+          setSuccess('Venda finalizada com sucesso! (Nenhuma impressora detectada)');
+        }
+      } catch (printError) {
+        console.error('Erro ao verificar/imprimir nota fiscal:', printError);
+        setSuccess('Venda finalizada com sucesso! (Erro na verificação da impressora)');
+      }
+      
+      // Limpar dados da venda
       setCartItems([]);
       setPaymentDialogOpen(false);
-      setAmountReceived('');
+      setAmountReceived(0);
       setDiscount(0);
       setPaymentMethod('dinheiro');
       
@@ -220,10 +321,119 @@ const PDV = () => {
     }
   };
 
+  // Imprimir nota fiscal manualmente
+  const handlePrintReceipt = async () => {
+    if (cartItems.length === 0) {
+      setError('Carrinho vazio - não é possível imprimir');
+      return;
+    }
+
+    try {
+      const receiptData = {
+        payment_method: paymentMethod,
+        discount_percentage: parseFloat(discount),
+        amount_received: paymentMethod === 'dinheiro' ? parseFloat(amountReceived) : parseFloat(total),
+        vendedor: user?.name || 'Sistema'
+      };
+      
+      const totalsData = {
+        subtotal,
+        discount: parseFloat(discount) || 0,
+        discountPercentage: parseFloat(discount) || 0,
+        discountAmount: (subtotal * parseFloat(discount)) / 100,
+        total,
+        change: paymentMethod === 'dinheiro' ? change : 0
+      };
+      
+      // Verifica primeiro se há impressora térmica conectada
+      const thermalPrinter = await detectThermalPrinter();
+      const printerCheck = await isPrinterAvailable();
+      
+      if (thermalPrinter) {
+        // Impressora térmica detectada - impressão prioritária
+        const printSuccess = await printReceipt(receiptData, cartItems, totalsData);
+        if (printSuccess) {
+          setSuccess('Nota fiscal enviada para impressora térmica!');
+        } else {
+          setError('Erro ao imprimir na impressora térmica');
+        }
+      } else if (printerCheck) {
+        // Impressora padrão disponível
+        const printSuccess = await printReceipt(receiptData, cartItems, totalsData);
+        if (printSuccess) {
+          setSuccess('Nota fiscal enviada para impressão!');
+        } else {
+          setError('Erro ao imprimir nota fiscal');
+        }
+      } else {
+        setError('Nenhuma impressora detectada');
+      }
+    } catch (error) {
+      console.error('Erro ao imprimir:', error);
+      setError('Erro ao imprimir nota fiscal');
+    }
+  };
+
   // Handle barcode input
   const handleBarcodeSubmit = (e) => {
     e.preventDefault();
     searchProductByBarcode(barcode);
+  };
+
+  // Detectar entrada automática de leitor de código de barras
+  const handleBarcodeChange = (e) => {
+    const value = e.target.value;
+    const currentTime = Date.now();
+    const previousTime = lastKeystrokeRef.current;
+    
+    // Limpar timeout anterior
+    if (barcodeTimeoutRef.current) {
+      clearTimeout(barcodeTimeoutRef.current);
+    }
+    
+    setBarcode(value);
+    
+    // Detectar entrada rápida (típica de leitores automáticos)
+    // Se há um tempo anterior e a diferença é muito pequena (< 50ms)
+    if (previousTime > 0 && value.length > 3) {
+      const timeBetweenKeystrokes = currentTime - previousTime;
+      if (timeBetweenKeystrokes < 50) {
+        setScannerDetected(true);
+      }
+    }
+    
+    lastKeystrokeRef.current = currentTime;
+    
+    // Se o valor tem mais de 8 caracteres (típico de códigos de barras)
+    // aguardar um pouco para ver se mais caracteres chegam
+    if (value.length >= 8) {
+      barcodeTimeoutRef.current = setTimeout(() => {
+        const timeSinceLastKeystroke = Date.now() - lastKeystrokeRef.current;
+        
+        // Se passou mais de 100ms desde a última tecla, processar
+        if (timeSinceLastKeystroke >= 100 && value.length >= 8) {
+          setScannerDetected(true);
+          searchProductByBarcode(value);
+        }
+      }, 150);
+    }
+  };
+
+  // Detectar Enter do leitor de código de barras
+  const handleBarcodeKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Limpar timeout se existir
+      if (barcodeTimeoutRef.current) {
+        clearTimeout(barcodeTimeoutRef.current);
+      }
+      
+      // Processar imediatamente se Enter foi pressionado
+      if (barcode.trim().length >= 3) {
+        searchProductByBarcode(barcode);
+      }
+    }
   };
 
   // Limpar mensagens após 3 segundos
@@ -246,12 +456,23 @@ const PDV = () => {
           <Typography variant="h5" component="div" sx={{ flexGrow: 1 }}>
             PDV - CAIXA ABERTO
           </Typography>
-          <Chip 
-            label={`Operador: ${user?.name}`} 
-            color="secondary" 
-            variant="outlined" 
-            sx={{ color: 'white', borderColor: 'white' }}
-          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {thermalPrinterDetected && (
+              <Chip 
+                icon={<PrintIcon />}
+                label="Impressora Térmica" 
+                color="success" 
+                variant="filled" 
+                sx={{ color: 'white', bgcolor: '#4caf50' }}
+              />
+            )}
+            <Chip 
+              label={`Operador: ${user?.name}`} 
+              color="secondary" 
+              variant="outlined" 
+              sx={{ color: 'white', borderColor: 'white' }}
+            />
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -273,17 +494,29 @@ const PDV = () => {
         {/* Left Panel - Scanner */}
         <Box sx={{ width: 400, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Scanner */}
-          <Paper sx={{ p: 2, bgcolor: '#e3f2fd' }}>
-            <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 'bold' }}>
-              CÓDIGO DE BARRAS
-            </Typography>
+          <Paper sx={{ p: 2, bgcolor: '#e8faf6' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                CÓDIGO DE BARRAS
+              </Typography>
+              {scannerDetected && (
+                <Chip 
+                  icon={<ScannerIcon />}
+                  label="Scanner Detectado"
+                  color="success"
+                  size="small"
+                  sx={{ fontWeight: 'bold' }}
+                />
+              )}
+            </Box>
             
             <form onSubmit={handleBarcodeSubmit}>
               <TextField
                 ref={barcodeInputRef}
                 fullWidth
                 value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
+                onChange={handleBarcodeChange}
+                onKeyDown={handleBarcodeKeyDown}
                 placeholder="Escaneie ou digite o código"
                 autoFocus
                 variant="outlined"
@@ -300,21 +533,21 @@ const PDV = () => {
           </Paper>
 
           {/* Valor Unitário */}
-          <Paper sx={{ p: 2, bgcolor: '#e8f5e8' }}>
-            <Typography variant="h6" gutterBottom color="success.main" sx={{ fontWeight: 'bold' }}>
+          <Paper sx={{ p: 2, bgcolor: '#e8faf6' }}>
+            <Typography variant="h6" gutterBottom color="secondary.main" sx={{ fontWeight: 'bold' }}>
               VALOR UNITÁRIO
             </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#01c38e' }}>
               {cartItems.length > 0 ? formatCurrency(cartItems[cartItems.length - 1]?.price || 0) : formatCurrency(0)}
             </Typography>
           </Paper>
 
           {/* Total do Item */}
-          <Paper sx={{ p: 2, bgcolor: '#fff3e0' }}>
-            <Typography variant="h6" gutterBottom color="warning.main" sx={{ fontWeight: 'bold' }}>
+          <Paper sx={{ p: 2, bgcolor: '#f0f4f8' }}>
+            <Typography variant="h6" gutterBottom color="primary.main" sx={{ fontWeight: 'bold' }}>
               TOTAL DO ITEM
             </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#f57c00' }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#132d46' }}>
               {cartItems.length > 0 ? formatCurrency((cartItems[cartItems.length - 1]?.price * cartItems[cartItems.length - 1]?.quantity) || 0) : formatCurrency(0)}
             </Typography>
           </Paper>
@@ -440,9 +673,38 @@ const PDV = () => {
                             >
                               <RemoveIcon fontSize="small" />
                             </IconButton>
-                            <Typography variant="body2" sx={{ minWidth: 30, textAlign: 'center', fontWeight: 'bold' }}>
-                              {item.quantity.toFixed(3)}
-                            </Typography>
+                            <TextField
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const newQuantity = parseInt(e.target.value) || 1;
+                                updateQuantity(item.id, newQuantity);
+                              }}
+                              onBlur={(e) => {
+                                const newQuantity = parseInt(e.target.value) || 1;
+                                if (newQuantity < 1) {
+                                  updateQuantity(item.id, 1);
+                                }
+                              }}
+                              type="number"
+                              inputProps={{ 
+                                min: 1, 
+                                max: item.stock,
+                                style: { textAlign: 'center', padding: '2px 4px' }
+                              }}
+                              sx={{ 
+                                width: 50, 
+                                '& .MuiOutlinedInput-root': {
+                                  height: 24,
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold'
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                  padding: '2px 4px'
+                                }
+                              }}
+                              variant="outlined"
+                              size="small"
+                            />
                             <IconButton
                               size="small"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
@@ -484,31 +746,31 @@ const PDV = () => {
           {/* Painel de Totais */}
           <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
             {/* Subtotal */}
-            <Paper sx={{ flex: 1, p: 2, bgcolor: '#e8f5e8' }}>
-              <Typography variant="h6" gutterBottom color="success.main" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+            <Paper sx={{ flex: 1, p: 2, bgcolor: '#e8faf6' }}>
+              <Typography variant="h6" gutterBottom color="secondary.main" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
                 SUBTOTAL
               </Typography>
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#2e7d32', textAlign: 'center' }}>
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#01c38e', textAlign: 'center' }}>
                 {formatCurrency(subtotal)}
               </Typography>
             </Paper>
 
             {/* Total Recebido */}
-            <Paper sx={{ flex: 1, p: 2, bgcolor: '#e3f2fd' }}>
+            <Paper sx={{ flex: 1, p: 2, bgcolor: '#f0f4f8' }}>
               <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
                 TOTAL RECEBIDO
               </Typography>
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#1565c0', textAlign: 'center' }}>
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#132d46', textAlign: 'center' }}>
                 {formatCurrency(parseFloat(amountReceived) || 0)}
               </Typography>
             </Paper>
 
             {/* Troco */}
-            <Paper sx={{ flex: 1, p: 2, bgcolor: '#fff3e0' }}>
-              <Typography variant="h6" gutterBottom color="warning.main" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+            <Paper sx={{ flex: 1, p: 2, bgcolor: '#f8f9fa' }}>
+              <Typography variant="h6" gutterBottom color="secondary.main" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
                 TROCO
               </Typography>
-              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#f57c00', textAlign: 'center' }}>
+              <Typography variant="h2" sx={{ fontWeight: 'bold', color: '#01c38e', textAlign: 'center' }}>
                 {formatCurrency(change)}
               </Typography>
             </Paper>
@@ -526,6 +788,20 @@ const PDV = () => {
             >
               LIMPAR VENDA
             </Button>
+            
+            {/* Botão Configurações de Impressora */}
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => setPrinterSettingsOpen(true)}
+              startIcon={<SettingsIcon />}
+              size="large"
+              sx={{ py: 2, fontSize: '1.1rem', fontWeight: 'bold' }}
+              title="Configurações de Impressora"
+            >
+              IMPRESSORA
+            </Button>
+            
             <Button
               variant="contained"
               color="success"
@@ -604,6 +880,20 @@ const PDV = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPaymentDialogOpen(false)}>Cancelar</Button>
+          
+          {/* Botão para imprimir nota fiscal (preview) */}
+          {cartItems.length > 0 && printerAvailable && (
+            <Button
+              onClick={handlePrintReceipt}
+              startIcon={<PrintIcon />}
+              variant="outlined"
+              color={thermalPrinterDetected ? "success" : "secondary"}
+              disabled={loading}
+            >
+              {thermalPrinterDetected ? "Imprimir (Térmica)" : "Imprimir Nota"}
+            </Button>
+          )}
+          
           <Button
             onClick={finalizeSale}
             variant="contained"
@@ -614,6 +904,12 @@ const PDV = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Dialog de Configurações de Impressora */}
+      <PrinterSettings 
+        open={printerSettingsOpen} 
+        onClose={() => setPrinterSettingsOpen(false)} 
+      />
     </Box>
   );
 };

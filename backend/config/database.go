@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"net/url"
+	"strings"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/postgres"
@@ -15,6 +17,60 @@ import (
 var DB *gorm.DB
 
 func InitDB() {
+	// Verificar se existe DATABASE_URL (Railway/Heroku style)
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL != "" {
+		// Usar DATABASE_URL do Railway
+		connectWithDatabaseURL(databaseURL)
+	} else {
+		// Usar configuração tradicional
+		connectWithTraditionalConfig()
+	}
+
+	// Executar migrações
+	runMigrations()
+}
+
+func connectWithDatabaseURL(databaseURL string) {
+	var err error
+	
+	// Parse da URL do banco
+	parsedURL, err := url.Parse(databaseURL)
+	if err != nil {
+		log.Fatal("Erro ao fazer parse da DATABASE_URL:", err)
+	}
+
+	if parsedURL.Scheme == "postgres" || parsedURL.Scheme == "postgresql" {
+		// Extrair informações da URL
+		host := parsedURL.Hostname()
+		port := parsedURL.Port()
+		if port == "" {
+			port = "5432"
+		}
+		dbname := strings.TrimPrefix(parsedURL.Path, "/")
+		user := parsedURL.User.Username()
+		password, _ := parsedURL.User.Password()
+		
+		// SSL mode baseado no host (Railway usa SSL)
+		sslmode := "require"
+		if strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") {
+			sslmode = "disable"
+		}
+
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+			host, user, password, dbname, port, sslmode)
+
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatal("Falha ao conectar com PostgreSQL via DATABASE_URL:", err)
+		}
+		log.Printf("Conexão com PostgreSQL estabelecida via DATABASE_URL (host: %s)", host)
+	} else {
+		log.Fatal("DATABASE_URL deve ser uma URL PostgreSQL válida")
+	}
+}
+
+func connectWithTraditionalConfig() {
 	dbType := os.Getenv("DB_TYPE")
 	if dbType == "" {
 		dbType = "sqlite" // padrão
@@ -70,9 +126,6 @@ func InitDB() {
 		}
 		log.Println("Conexão com SQLite estabelecida")
 	}
-
-	// Executar migrações
-	runMigrations()
 }
 
 func runMigrations() {

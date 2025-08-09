@@ -11,7 +11,7 @@ export const useAuth = () => {
   return context;
 };
 
-const API_URL = 'http://localhost:8081/api/v1';
+const API_URL = 'http://localhost:8080/api/v1';
 
 // Configurar axios
 axios.defaults.baseURL = API_URL;

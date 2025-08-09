@@ -22,17 +22,20 @@ func main() {
 
 	// Configurar Gin
 	r := gin.Default()
+	
+	// Desabilitar redirecionamento automático de trailing slash
+	r.RedirectTrailingSlash = false
 
 	// Configurar CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:5173", "http://localhost:8081"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
 
 	// Configurar rotas
-	routes.SetupRoutes(r)
+	routes.SetupRoutes(r, config.DB)
 
 	// Obter porta do ambiente ou usar padrão
 	port := os.Getenv("PORT")

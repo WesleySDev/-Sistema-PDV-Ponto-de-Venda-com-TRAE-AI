@@ -6,13 +6,13 @@ const testDirectAPI = async () => {
   try {
     // 1. Testar health check
     console.log('1. Testando health check...');
-    const healthResponse = await fetch('http://localhost:8081/health');
+    const healthResponse = await fetch('http://localhost:8080/health');
     const healthData = await healthResponse.json();
     console.log('✅ Health check:', healthData);
     
     // 2. Fazer login para obter token
     console.log('2. Fazendo login...');
-    const loginResponse = await fetch('http://localhost:8081/api/v1/auth/login', {
+    const loginResponse = await fetch('http://localhost:8080/api/v1/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,7 +32,7 @@ const testDirectAPI = async () => {
     
     // 3. Testar categorias com token
     console.log('3. Testando categorias...');
-    const categoriesResponse = await fetch('http://localhost:8081/api/v1/categories', {
+    const categoriesResponse = await fetch('http://localhost:8080/api/v1/categories', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${loginData.token}`,

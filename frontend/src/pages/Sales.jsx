@@ -40,6 +40,7 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CurrencyInput from '../components/CurrencyInput';
+import NumberInput from '../components/NumberInput';
 import { formatCurrency } from '../utils/currency';
 
 const Sales = () => {
@@ -457,12 +458,11 @@ const Sales = () => {
                       name={`items.${index}.quantity`}
                       control={control}
                       render={({ field }) => (
-                        <TextField
+                        <NumberInput
                           {...field}
                           label="Quantidade"
-                          type="number"
                           fullWidth
-                          inputProps={{ min: 1 }}
+                          min={1}
                         />
                       )}
                     />

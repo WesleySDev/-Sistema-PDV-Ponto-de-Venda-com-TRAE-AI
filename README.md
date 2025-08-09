@@ -12,6 +12,7 @@ Este é um sistema completo de Ponto de Venda (PDV) desenvolvido para demonstrar
 - Desenvolvimento do backend em Go
 - Criação do frontend em React
 - Implementação do banco de dados
+
 - Testes e debugging
 - Formatação e padronização de código
 
@@ -57,6 +58,8 @@ Este é um sistema completo de Ponto de Venda (PDV) desenvolvido para demonstrar
 - Aplicação de descontos
 - Formatação automática de valores monetários
 
+
+
 ### 📊 Relatórios e Dashboard
 - Dashboard com estatísticas em tempo real
 - Histórico de vendas
@@ -74,8 +77,10 @@ Este é um sistema completo de Ponto de Venda (PDV) desenvolvido para demonstrar
 PDV/
 ├── backend/                 # API em Go
 │   ├── controllers/         # Controladores da API
+
 │   ├── models/             # Modelos de dados
-│   ├── middleware/         # Middlewares (auth, cors, etc.)
+│   ├── services/           # Serviços de negócio
+│   ├── middleware/         # Middlewares (auth, cors)
 │   ├── routes/             # Definição de rotas
 │   └── config/             # Configurações e database
 └── frontend/               # Interface React
@@ -83,9 +88,12 @@ PDV/
     │   ├── components/     # Componentes reutilizáveis
     │   ├── pages/          # Páginas da aplicação
     │   ├── contexts/       # Contextos React (Auth)
+    │   ├── services/       # Comunicação com API
     │   └── utils/          # Utilitários (formatação, etc.)
     └── public/
 ```
+
+## 🚀 Como Executar
 
 ## 🚀 Como Executar
 
@@ -98,8 +106,8 @@ PDV/
 ```bash
 cd backend
 go mod tidy
-go run main.go -migrate  # Primeira execução (cria tabelas)
-go run main.go           # Execuções subsequentes
+cp .env.example .env
+go run main.go
 ```
 
 ### Frontend
@@ -118,32 +126,38 @@ npm run dev
 - **Gerente**: gerente@pdv.com / gerente123
 - **Vendedor**: vendedor@pdv.com / vendedor123
 
+
+
 ## 🎯 Demonstração do TRAE AI
 
 Este projeto serve como uma demonstração prática das capacidades do TRAE AI:
 
 ### ⚡ Velocidade de Desenvolvimento
-- **3 dias** para um sistema completo
+- **3 dias** para um sistema completo de PDV
 - Implementação simultânea de frontend e backend
 - Integração automática entre componentes
+- Funcionalidades completas implementadas rapidamente
 
 ### 🧠 Inteligência de Código
 - Arquitetura bem estruturada
 - Padrões de código consistentes
 - Tratamento de erros robusto
 - Validações de segurança
+- Sistema de autenticação robusto
 
 ### 🔄 Iteração Rápida
 - Correções instantâneas de bugs
 - Implementação de novas funcionalidades em tempo real
 - Refatoração automática de código
 - Otimizações de performance
+- Melhorias contínuas no sistema
 
 ### 🎨 Interface Moderna
 - Design responsivo
 - Componentes Material-UI
 - UX intuitiva
 - Formatação automática de dados
+- Interface limpa e profissional
 
 ## 📈 Funcionalidades Destacadas
 
@@ -163,15 +177,24 @@ Este projeto serve como uma demonstração prática das capacidades do TRAE AI:
 - Gráficos e métricas
 - Controle de estoque
 - Relatórios de vendas
+- Visão geral do negócio
+
+### 🔐 Sistema de Autenticação Robusto
+- Controle de acesso por níveis
+- Autenticação JWT segura
+- Gerenciamento de usuários
+- Proteção de rotas
+- Sessões seguras
 
 ## 🤖 Sobre o TRAE AI
 
 Este projeto foi desenvolvido para demonstrar como o TRAE AI pode:
 - Acelerar drasticamente o desenvolvimento
 - Manter alta qualidade de código
-- Implementar funcionalidades complexas
+- Implementar funcionalidades complexas de PDV
 - Criar interfaces modernas e responsivas
 - Integrar tecnologias diferentes de forma seamless
+- Desenvolver sistemas empresariais completos
 
 ## 📝 Licença
 

@@ -36,9 +36,15 @@ export const parseCurrency = (formattedValue) => {
  * @returns {object} - Objeto com value, displayValue e onChange
  */
 export const useCurrencyInput = (initialValue = 0, onChangeCallback) => {
+  // Formata valor para exibição no input (sem formatação quando focado)
+  const formatValueForInput = (val) => {
+    if (val === 0) return '';
+    return val.toString().replace('.', ',');
+  };
+
   const [value, setValue] = useState(initialValue);
-  const [displayValue, setDisplayValue] = useState(initialValue === 0 ? '' : initialValue.toString());
-  const [isFormatted, setIsFormatted] = useState(false);
+  const [displayValue, setDisplayValue] = useState(initialValue === 0 ? '' : formatValueForInput(initialValue));
+  const [isFocused, setIsFocused] = useState(false);
 
   const updateValue = (newValue) => {
     setValue(newValue);
@@ -47,65 +53,81 @@ export const useCurrencyInput = (initialValue = 0, onChangeCallback) => {
     }
   };
 
-  const onChange = (inputValue) => {
-    // Remove formatação e converte para número
-    const numericValue = parseCurrency(inputValue);
-    updateValue(numericValue);
-    setDisplayValue(formatCurrency(numericValue));
-  };
-
   const onInputChange = (e) => {
     const inputValue = e.target.value;
     
-    // Se está formatado e o usuário começou a digitar, remove a formatação
-    if (isFormatted) {
-      setIsFormatted(false);
-      const cleanValue = inputValue.replace(/[^0-9,\.]/g, '');
-      setDisplayValue(cleanValue);
-      const numericValue = parseFloat(cleanValue.replace(',', '.')) || 0;
-      updateValue(numericValue);
-      return;
+    // Permite apenas números, vírgula e ponto
+    let cleanInput = inputValue.replace(/[^0-9,\.]/g, '');
+    
+    // Se tem ponto, converte para vírgula (padrão brasileiro)
+    if (cleanInput.includes('.')) {
+      cleanInput = cleanInput.replace('.', ',');
     }
     
-    // Permite apenas números, vírgula e ponto
-    const cleanInput = inputValue.replace(/[^0-9,\.]/g, '');
+    // Garante apenas uma vírgula
+    const commaCount = (cleanInput.match(/,/g) || []).length;
+    if (commaCount > 1) {
+      const parts = cleanInput.split(',');
+      cleanInput = parts[0] + ',' + parts.slice(1).join('');
+    }
+    
+    // Permite vírgula no início (ex: ',50' vira '0,50')
+    if (cleanInput.startsWith(',')) {
+      cleanInput = '0' + cleanInput;
+    }
+    
+    // Permite vírgula no final (ex: '6,' fica como '6,')
+    // Não precisa fazer nada especial, apenas manter como está
+    
     setDisplayValue(cleanInput);
     
     // Converte para número
-    const numericValue = parseFloat(cleanInput.replace(',', '.')) || 0;
+    let numericValue = 0;
+    if (cleanInput) {
+      let normalizedValue = cleanInput.replace(',', '.');
+      // Se termina com ponto, remove para evitar erro no parseFloat
+      if (normalizedValue.endsWith('.')) {
+        normalizedValue = normalizedValue.slice(0, -1);
+      }
+      numericValue = parseFloat(normalizedValue) || 0;
+    }
+    
     updateValue(numericValue);
   };
 
   const onBlur = () => {
-    // Ao perder o foco, formata o valor
+    setIsFocused(false);
+    // Ao perder o foco, formata o valor como moeda
     if (value > 0) {
       setDisplayValue(formatCurrency(value));
-      setIsFormatted(true);
     } else {
       setDisplayValue('');
-      setIsFormatted(false);
     }
   };
 
   const onFocus = () => {
+    setIsFocused(true);
     // Ao focar, mostra apenas o número para facilitar edição
-    if (isFormatted && value > 0) {
-      setDisplayValue(value.toString().replace('.', ','));
-      setIsFormatted(false);
+    if (value > 0) {
+      setDisplayValue(formatValueForInput(value));
+    } else {
+      setDisplayValue('');
     }
   };
 
   return {
     value,
     displayValue,
-    onChange,
     onInputChange,
     onBlur,
     onFocus,
     setValue: (newValue) => {
       updateValue(newValue);
-      setDisplayValue(formatCurrency(newValue));
-      setIsFormatted(true);
+      if (!isFocused) {
+        setDisplayValue(newValue === 0 ? '' : formatCurrency(newValue));
+      } else {
+        setDisplayValue(formatValueForInput(newValue));
+      }
     }
   };
 };

@@ -31,6 +31,7 @@ import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import CurrencyInput from '../components/CurrencyInput';
+import NumberInput from '../components/NumberInput';
 import { formatCurrency } from '../utils/currency';
 
 const Products = () => {
@@ -100,7 +101,7 @@ const Products = () => {
       reset({
         name: '',
         barcode: '',
-        price: '',
+        price: 0,
         stock: '',
         min_stock: 10,
         unit: 'un',
@@ -393,11 +394,11 @@ const Products = () => {
                   control={control}
                   rules={{ required: 'Estoque é obrigatório', min: { value: 0, message: 'Estoque não pode ser negativo' } }}
                   render={({ field }) => (
-                    <TextField
+                    <NumberInput
                       {...field}
                       fullWidth
                       label="Estoque"
-                      type="number"
+                      min={0}
                       error={!!errors.stock}
                       helperText={errors.stock?.message}
                     />
@@ -410,11 +411,11 @@ const Products = () => {
                   control={control}
                   rules={{ required: 'Estoque mínimo é obrigatório', min: { value: 0, message: 'Estoque mínimo não pode ser negativo' } }}
                   render={({ field }) => (
-                    <TextField
+                    <NumberInput
                       {...field}
                       fullWidth
                       label="Estoque Mínimo"
-                      type="number"
+                      min={0}
                       error={!!errors.min_stock}
                       helperText={errors.min_stock?.message}
                     />

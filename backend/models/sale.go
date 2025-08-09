@@ -41,12 +41,12 @@ type SaleItem struct {
 // SaleRequest representa os dados de entrada para criar uma venda
 type SaleRequest struct {
 	Items              []SaleItemRequest `json:"items" binding:"required,min=1"`
-	PaymentMethod      string            `json:"payment_method" binding:"required"`
+	PaymentMethod      string            `json:"payment_method" binding:"required,oneof=dinheiro cartao_credito cartao_debito pix"`
 	DiscountPercentage *float64          `json:"discount_percentage" binding:"omitempty,gte=0"`
 	AmountReceived     *float64          `json:"amount_received" binding:"omitempty,gte=0"`
 	Discount           *float64          `json:"discount" binding:"omitempty,gte=0"`
 	Tax                *float64          `json:"tax" binding:"omitempty,gte=0"`
-	PaymentType        string            `json:"payment_type" binding:"omitempty,oneof=cash card pix"`
+	PaymentType        string            `json:"payment_type" binding:"omitempty,oneof=dinheiro cartao_credito cartao_debito pix"`
 }
 
 type SaleItemRequest struct {

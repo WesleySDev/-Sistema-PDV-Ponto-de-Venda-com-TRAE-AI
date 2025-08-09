@@ -17,10 +17,55 @@ import Layout from './components/Layout';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#132d46', // Azul escuro Sborg
+      light: '#1a1e29', // Azul muito escuro Sborg
+      dark: '#0f1f35',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#01c38e', // Verde Sborg
+      light: '#33d1a3',
+      dark: '#00a074',
+    },
+    warning: {
+      main: '#01c38e', // Verde Sborg para destaque
+      light: '#e8faf6',
+      dark: '#00a074',
+    },
+    background: {
+      default: '#ffffff', // Branco Sborg
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#1a1e29', // Azul muito escuro Sborg
+      secondary: '#132d46',
+    },
+  },
+  typography: {
+    fontFamily: 'Arial, sans-serif',
+    h4: {
+      fontWeight: 'bold',
+      color: '#424242',
+    },
+    h6: {
+      fontWeight: 'bold',
+    },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#132d46',
+          height: 80,
+        },
+      },
     },
   },
 });

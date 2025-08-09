@@ -4,10 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"pdv-backend/controllers"
 	"pdv-backend/middleware"
+	"gorm.io/gorm"
 )
 
 // SetupRoutes configura todas as rotas da API
-func SetupRoutes(r *gin.Engine) {
+func SetupRoutes(r *gin.Engine, db *gorm.DB) {
 	// Rota de health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "message": "PDV API está funcionando"})
@@ -89,5 +90,9 @@ func SetupRoutes(r *gin.Engine) {
 			dashboard.GET("/low-stock", controllers.GetLowStockProducts)
 			dashboard.GET("/top-products", controllers.GetTopProducts)
 		}
+
+
 	}
+
+
 }
